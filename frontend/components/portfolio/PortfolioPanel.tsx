@@ -4,22 +4,23 @@ import { useEffect } from 'react'
 import { useTradingStore } from '@/lib/store/trading'
 import { portfolioApi } from '@/lib/api/client'
 import { formatPrice, formatPnl, formatPercent } from '@/lib/utils/format'
-import { TrendingUp, TrendingDown, DollarSign, BarChart2, Award } from 'lucide-react'
+import { TrendingUp, TrendingDown, DollarSign, Award } from 'lucide-react'
 
 function StatCard({ label, value, sub, color, icon: Icon }: {
-  label: string; value: string; sub?: string; color?: string; icon?: React.ComponentType<{ size?: number; color?: string }>
+  label: string; value: string; sub?: string; color?: string
+  icon?: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>
 }) {
   return (
     <div style={{
-      background: '#111827', border: '1px solid #1e2d40', borderRadius: 10,
-      padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 4,
+      background: 'var(--ink-800)', border: '1px solid var(--hairline)',
+      borderRadius: 9, padding: '12px 14px',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: 11, color: '#4a5568', fontWeight: 500 }}>{label}</span>
-        {Icon && <Icon size={14} color={color ?? '#4a5568'} />}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+        <span style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>{label}</span>
+        {Icon && <Icon size={13} color={color ?? 'var(--mute)'} strokeWidth={1.8} />}
       </div>
-      <div style={{ fontSize: 18, fontWeight: 700, color: color ?? '#e8edf5' }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: '#7a8da8' }}>{sub}</div>}
+      <div className="num" style={{ fontSize: 17, fontWeight: 700, color: color ?? '#fff', letterSpacing: '-0.02em' }}>{value}</div>
+      {sub && <div className="num" style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>{sub}</div>}
     </div>
   )
 }
@@ -28,19 +29,9 @@ export default function PortfolioPanel() {
   const { positions, portfolioStats, setPositions, setPortfolioStats } = useTradingStore()
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [posRes, statsRes] = await Promise.all([
-          portfolioApi.getPositions(),
-          portfolioApi.getStats(),
-        ])
-        setPositions(posRes.data.positions || [])
-        setPortfolioStats(statsRes.data)
-      } catch {
-        // ignore - will be populated via WebSocket
-      }
-    }
-    load()
+    Promise.all([portfolioApi.getPositions(), portfolioApi.getStats()])
+      .then(([pRes, sRes]) => { setPositions(pRes.data.positions || []); setPortfolioStats(sRes.data) })
+      .catch(() => {})
   }, [setPositions, setPortfolioStats])
 
   const stats = portfolioStats
@@ -48,117 +39,81 @@ export default function PortfolioPanel() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
-      <div style={{
-        padding: '12px 16px', borderBottom: '1px solid #1e2d40',
-        display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
-      }}>
-        <TrendingUp size={16} color="#00d4ff" />
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#e8edf5' }}>Portfolio</span>
+      <div style={{ height: 44, display: 'flex', alignItems: 'center', gap: 8, padding: '0 16px', borderBottom: '1px solid var(--hairline)', flexShrink: 0 }}>
+        <TrendingUp size={14} color="var(--accent-blue)" />
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>Portfolio</span>
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
-        {/* Stats grid */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '12px 14px' }}>
         {stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18 }}>
             <StatCard
-              label="Total Value"
+              label="TOTAL VALUE" icon={DollarSign}
               value={`$${stats.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-              sub={`Cash: $${stats.cash.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-              icon={DollarSign}
-              color="#00d4ff"
+              sub={`Cash $${stats.cash.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+              color="var(--accent-blue)"
             />
             <StatCard
-              label="Total P&L"
+              label="TOTAL P&L"
+              icon={stats.totalPnl >= 0 ? TrendingUp : TrendingDown}
               value={formatPnl(stats.totalPnl)}
               sub={formatPercent(stats.totalPnlPercent)}
-              color={stats.totalPnl >= 0 ? '#00ff88' : '#ff4757'}
-              icon={stats.totalPnl >= 0 ? TrendingUp : TrendingDown}
+              color={stats.totalPnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}
             />
             <StatCard
-              label="Day P&L"
+              label="DAY P&L"
               value={formatPnl(stats.dayPnl)}
               sub={formatPercent(stats.dayPnlPercent)}
-              color={stats.dayPnl >= 0 ? '#00ff88' : '#ff4757'}
+              color={stats.dayPnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)'}
             />
             <StatCard
-              label="Win Rate"
+              label="WIN RATE" icon={Award}
               value={`${stats.winRate.toFixed(1)}%`}
               sub={`${stats.totalTrades} trades`}
-              icon={Award}
-              color="#ffd32a"
+              color="var(--accent-amber)"
             />
           </div>
         )}
 
-        {/* Positions table */}
-        <div style={{ fontSize: 12, fontWeight: 700, color: '#4a5568', marginBottom: 8, letterSpacing: '0.5px' }}>
+        {/* Positions */}
+        <div style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}>
           OPEN POSITIONS
         </div>
 
         {positions.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 20px', color: '#4a5568', fontSize: 13 }}>
-            No open positions
-          </div>
+          <div style={{ textAlign: 'center', padding: '28px 0', color: 'var(--mute)', fontSize: 12 }}>No open positions</div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {/* Column headers */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '100px 1fr 1fr 1fr',
-              gap: 8, padding: '6px 10px',
-              fontSize: 10, color: '#4a5568', fontWeight: 600, letterSpacing: '0.5px',
-            }}>
-              <span>SYMBOL</span>
-              <span style={{ textAlign: 'right' }}>QTY</span>
-              <span style={{ textAlign: 'right' }}>VALUE</span>
-              <span style={{ textAlign: 'right' }}>P&L</span>
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', padding: '4px 10px', fontSize: 10, color: 'var(--mute)', letterSpacing: '0.06em', fontWeight: 600 }}>
+              <span>PAIR</span><span style={{ textAlign: 'right' }}>QTY</span><span style={{ textAlign: 'right' }}>VALUE</span><span style={{ textAlign: 'right' }}>P&L</span>
             </div>
-
-            {positions.map((pos) => (
-              <div
-                key={pos.id}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '100px 1fr 1fr 1fr',
-                  gap: 8, padding: '10px 10px',
-                  background: '#111827', borderRadius: 8,
-                  border: '1px solid #1e2d40',
-                  alignItems: 'center',
-                }}
-              >
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#e8edf5' }}>
-                    {pos.symbol.replace('USDT', '')}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+              {positions.map(pos => (
+                <div key={pos.id} style={{
+                  display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr',
+                  padding: '10px', background: 'var(--ink-800)', border: '1px solid var(--hairline)',
+                  borderRadius: 8, alignItems: 'center',
+                }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{pos.symbol.replace('USDT','')}</div>
+                    <div style={{ fontSize: 10, color: pos.side === 'LONG' ? 'var(--accent-green)' : 'var(--accent-red)', fontWeight: 600 }}>{pos.side}</div>
                   </div>
-                  <div style={{
-                    fontSize: 10,
-                    color: pos.side === 'LONG' ? '#00ff88' : '#ff4757',
-                    fontWeight: 600,
-                  }}>
-                    {pos.side}
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="num" style={{ fontSize: 12, color: '#d7dde7' }}>{pos.quantity}</div>
+                    <div className="num" style={{ fontSize: 10, color: 'var(--mute)' }}>${formatPrice(pos.avgPrice)}</div>
                   </div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, color: '#e8edf5' }}>{pos.quantity}</div>
-                  <div style={{ fontSize: 10, color: '#4a5568' }}>${formatPrice(pos.avgPrice)}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, color: '#e8edf5' }}>
-                    ${pos.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="num" style={{ fontSize: 12, color: '#d7dde7' }}>${pos.value.toLocaleString('en-US', { maximumFractionDigits: 2 })}</div>
+                    <div className="num" style={{ fontSize: 10, color: 'var(--mute)' }}>${formatPrice(pos.currentPrice)}</div>
                   </div>
-                  <div style={{ fontSize: 10, color: '#4a5568' }}>${formatPrice(pos.currentPrice)}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: pos.pnl >= 0 ? '#00ff88' : '#ff4757' }}>
-                    {formatPnl(pos.pnl)}
-                  </div>
-                  <div style={{ fontSize: 10, color: pos.pnlPercent >= 0 ? '#00ff88' : '#ff4757' }}>
-                    {formatPercent(pos.pnlPercent)}
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="num" style={{ fontSize: 12, fontWeight: 600, color: pos.pnl >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{formatPnl(pos.pnl)}</div>
+                    <div className="num" style={{ fontSize: 10, color: pos.pnlPercent >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>{formatPercent(pos.pnlPercent)}</div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

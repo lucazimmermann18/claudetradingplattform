@@ -2,169 +2,129 @@
 
 import { useState, useCallback } from 'react'
 import { useTradingStore } from '@/lib/store/trading'
-import { formatPrice, formatPercent, getChangeClass } from '@/lib/utils/format'
-import { Search, Bell, Settings, ChevronDown } from 'lucide-react'
+import { formatPrice, formatPercent } from '@/lib/utils/format'
+import { Search, ChevronDown, Bell } from 'lucide-react'
 
-const POPULAR = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT', 'DOTUSDT', 'AVAXUSDT']
+const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOTUSDT','AVAXUSDT','LINKUSDT','LTCUSDT']
 
 export default function TopBar() {
   const { activeSymbol, setActiveSymbol, tickers, connected } = useTradingStore()
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const [q, setQ] = useState('')
 
   const ticker = tickers[activeSymbol]
+  const base = activeSymbol.replace('USDT','')
+  const filtered = q ? SYMBOLS.filter(s => s.includes(q.toUpperCase())) : SYMBOLS
 
-  const filtered = query
-    ? POPULAR.filter((s) => s.toLowerCase().includes(query.toLowerCase()))
-    : POPULAR
-
-  const handleSelect = useCallback((symbol: string) => {
-    setActiveSymbol(symbol)
-    setSearchOpen(false)
-    setQuery('')
-  }, [setActiveSymbol])
+  const select = useCallback((s: string) => { setActiveSymbol(s); setOpen(false); setQ('') }, [setActiveSymbol])
 
   return (
-    <div style={{
-      height: 56,
-      background: '#0d1117',
-      borderBottom: '1px solid #1e2d40',
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 20px',
-      gap: 20,
-      flexShrink: 0,
+    <header style={{
+      height: 56, flexShrink: 0,
+      background: 'var(--ink-900)',
+      borderBottom: '1px solid var(--hairline)',
+      display: 'flex', alignItems: 'center', gap: 20, padding: '0 20px',
     }}>
-      {/* Symbol selector */}
+      {/* Symbol picker */}
       <div style={{ position: 'relative' }}>
-        <button
-          onClick={() => setSearchOpen(!searchOpen)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: '#111827',
-            border: '1px solid #1e2d40',
-            borderRadius: 8, padding: '6px 12px',
-            color: '#e8edf5', cursor: 'pointer',
-            fontSize: 14, fontWeight: 600,
-          }}
-        >
-          <span style={{ color: '#00d4ff' }}>{activeSymbol.replace('USDT', '')}</span>
-          <span style={{ color: '#4a5568', fontSize: 11 }}>/USDT</span>
-          <ChevronDown size={14} color="#7a8da8" />
+        <button onClick={() => setOpen(v => !v)} style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--hairline2)',
+          borderRadius: 7, padding: '6px 12px', cursor: 'pointer',
+        }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>{base}</span>
+          <span style={{ fontSize: 11, color: 'var(--mute)' }}>/USDT</span>
+          <ChevronDown size={13} color="var(--mute)" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
         </button>
 
-        {searchOpen && (
+        {open && (
           <div style={{
-            position: 'absolute', top: '110%', left: 0,
-            background: '#0f1623', border: '1px solid #1e2d40',
-            borderRadius: 10, padding: 8, zIndex: 100, width: 220,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            position: 'absolute', top: '110%', left: 0, zIndex: 50,
+            background: 'var(--ink-850)', border: '1px solid var(--hairline2)',
+            borderRadius: 10, width: 230, padding: 8,
+            boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '0 4px' }}>
-              <Search size={14} color="#4a5568" />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search symbol..."
-                style={{
-                  background: 'transparent', border: 'none', outline: 'none',
-                  color: '#e8edf5', fontSize: 13, flex: 1,
-                }}
-              />
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 7,
+              background: 'rgba(255,255,255,0.03)', border: '1px solid var(--hairline)',
+              borderRadius: 6, padding: '6px 10px', marginBottom: 6,
+            }}>
+              <Search size={12} color="var(--mute)" />
+              <input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Search…"
+                style={{ background: 'transparent', border: 'none', outline: 'none', color: '#d7dde7', fontSize: 12, flex: 1 }} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              {filtered.map((sym) => {
-                const t = tickers[sym]
-                return (
-                  <button
-                    key={sym}
-                    onClick={() => handleSelect(sym)}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '8px 8px', borderRadius: 6, cursor: 'pointer',
-                      background: sym === activeSymbol ? 'rgba(0,212,255,0.08)' : 'transparent',
-                      border: 'none', color: '#e8edf5', width: '100%', textAlign: 'left',
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>
-                        {sym.replace('USDT', '')}<span style={{ color: '#4a5568', fontSize: 11 }}>/USDT</span>
+            {filtered.map(sym => {
+              const t = tickers[sym]
+              const isActive = sym === activeSymbol
+              return (
+                <button key={sym} onClick={() => select(sym)} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  width: '100%', padding: '8px 10px', borderRadius: 6, cursor: 'pointer',
+                  background: isActive ? 'rgba(0,212,255,0.07)' : 'transparent',
+                  border: 'none', textAlign: 'left',
+                  transition: 'background 0.12s',
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: isActive ? 'var(--accent-blue)' : '#d7dde7' }}>
+                    {sym.replace('USDT','')}<span style={{ color: 'var(--mute)', fontSize: 11 }}>/USDT</span>
+                  </span>
+                  {t && (
+                    <div style={{ textAlign: 'right' }}>
+                      <div className="num" style={{ fontSize: 12, color: '#d7dde7' }}>${formatPrice(t.price)}</div>
+                      <div style={{ fontSize: 10, color: t.changePercent >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' }}>
+                        {formatPercent(t.changePercent)}
                       </div>
                     </div>
-                    {t && (
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, fontWeight: 600 }}>${formatPrice(t.price)}</div>
-                        <div style={{ fontSize: 11, color: t.changePercent >= 0 ? '#00ff88' : '#ff4757' }}>
-                          {formatPercent(t.changePercent)}
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+                  )}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Price info */}
+      {/* Price strip */}
       {ticker ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <div>
-            <span style={{ fontSize: 20, fontWeight: 700, color: '#e8edf5' }}>
-              ${formatPrice(ticker.price)}
-            </span>
-          </div>
-          <div style={{ display: 'flex', gap: 16, fontSize: 12 }}>
-            <div>
-              <div style={{ color: '#4a5568', marginBottom: 1 }}>24h Change</div>
-              <div style={{ color: ticker.changePercent >= 0 ? '#00ff88' : '#ff4757', fontWeight: 600 }}>
-                {formatPercent(ticker.changePercent)}
-              </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
+          <span className="num" style={{
+            fontSize: 20, fontWeight: 600, color: '#fff', letterSpacing: '-0.03em',
+          }}>${formatPrice(ticker.price)}</span>
+
+          {[
+            { label: '24h', value: formatPercent(ticker.changePercent), positive: ticker.changePercent >= 0 },
+            { label: 'High', value: `$${formatPrice(ticker.high24h)}` },
+            { label: 'Low',  value: `$${formatPrice(ticker.low24h)}` },
+            { label: 'Vol',  value: `${(ticker.volume / 1e6).toFixed(1)}M` },
+          ].map(({ label, value, positive }) => (
+            <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.08em' }}>{label}</span>
+              <span className="num" style={{
+                fontSize: 12, fontWeight: 500,
+                color: positive !== undefined
+                  ? positive ? 'var(--accent-green)' : 'var(--accent-red)'
+                  : '#d7dde7',
+              }}>{value}</span>
             </div>
-            <div>
-              <div style={{ color: '#4a5568', marginBottom: 1 }}>24h High</div>
-              <div style={{ color: '#e8edf5', fontWeight: 500 }}>${formatPrice(ticker.high24h)}</div>
-            </div>
-            <div>
-              <div style={{ color: '#4a5568', marginBottom: 1 }}>24h Low</div>
-              <div style={{ color: '#e8edf5', fontWeight: 500 }}>${formatPrice(ticker.low24h)}</div>
-            </div>
-            <div>
-              <div style={{ color: '#4a5568', marginBottom: 1 }}>Volume</div>
-              <div style={{ color: '#e8edf5', fontWeight: 500 }}>
-                {(ticker.volume / 1e6).toFixed(1)}M
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       ) : (
-        <div style={{ fontSize: 13, color: '#4a5568' }}>Loading market data...</div>
+        <span style={{ fontSize: 13, color: 'var(--mute)' }}>Loading…</span>
       )}
 
-      {/* Right side */}
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Live indicator */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: connected ? '#00ff88' : '#ff4757',
-            boxShadow: connected ? '0 0 8px #00ff88' : 'none',
+      {/* Right */}
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="dot" style={{
+            background: connected ? 'var(--accent-green)' : 'var(--accent-red)',
+            boxShadow: connected ? '0 0 8px var(--accent-green)' : 'none',
           }} />
-          <span style={{ fontSize: 11, color: '#4a5568', fontWeight: 500, letterSpacing: '0.5px' }}>
+          <span style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em', fontWeight: 600 }}>
             {connected ? 'LIVE' : 'OFFLINE'}
           </span>
         </div>
-
-        <button style={{
-          background: 'transparent', border: '1px solid #1e2d40',
-          borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: '#7a8da8',
-          display: 'flex', alignItems: 'center',
-        }}>
-          <Bell size={16} />
+        <button className="btn-ghost" style={{ padding: '5px 8px' }}>
+          <Bell size={14} />
         </button>
       </div>
-    </div>
+    </header>
   )
 }

@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useTradingStore } from '@/lib/store/trading'
 import { formatPrice, formatPercent } from '@/lib/utils/format'
-import { Star, Search, TrendingUp, TrendingDown, Minus, X, Plus } from 'lucide-react'
+import { Star, Search, TrendingUp, TrendingDown, X, Plus } from 'lucide-react'
 
-const AVAILABLE = [
-  'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT',
-  'ADAUSDT', 'DOTUSDT', 'AVAXUSDT', 'MATICUSDT', 'LINKUSDT',
-  'LTCUSDT', 'DOGEUSDT', 'ATOMUSDT', 'UNIUSDT', 'APTUSDT',
+const ALL_SYMBOLS = [
+  'BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT',
+  'ADAUSDT','DOTUSDT','AVAXUSDT','MATICUSDT','LINKUSDT',
+  'LTCUSDT','DOGEUSDT','ATOMUSDT','UNIUSDT','APTUSDT',
 ]
 
 export default function WatchlistPanel() {
@@ -16,77 +16,48 @@ export default function WatchlistPanel() {
   const [search, setSearch] = useState('')
   const [showAdd, setShowAdd] = useState(false)
 
-  const items = watchlist.map((sym) => ({
-    symbol: sym,
-    ticker: tickers[sym],
-    signal: signals.find((s) => s.symbol === sym)?.type,
-  }))
+  const items = watchlist
+    .filter(s => s.toLowerCase().includes(search.toLowerCase()))
+    .map(sym => ({ sym, ticker: tickers[sym], signal: signals.find(s => s.symbol === sym)?.type }))
 
-  const filtered = items.filter((item) =>
-    item.symbol.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const toAdd = AVAILABLE.filter((s) => !watchlist.includes(s))
+  const toAdd = ALL_SYMBOLS.filter(s => !watchlist.includes(s))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Header */}
       <div style={{
-        padding: '12px 16px', borderBottom: '1px solid #1e2d40',
-        display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+        height: 44, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 14px', borderBottom: '1px solid var(--hairline)', flexShrink: 0,
       }}>
-        <Star size={16} color="#ffd32a" fill="#ffd32a" />
-        <span style={{ fontSize: 14, fontWeight: 700, color: '#e8edf5' }}>Watchlist</span>
-        <button
-          onClick={() => setShowAdd(!showAdd)}
-          style={{
-            marginLeft: 'auto', background: 'transparent',
-            border: '1px solid #1e2d40', borderRadius: 6,
-            padding: '3px 8px', color: '#7a8da8', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 4, fontSize: 11,
-          }}
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Star size={13} color="var(--accent-amber)" fill="var(--accent-amber)" />
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#fff' }}>Watchlist</span>
+        </div>
+        <button onClick={() => setShowAdd(v => !v)} className="btn-ghost" style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '3px 8px', fontSize: 11 }}>
           <Plus size={11} /> Add
         </button>
       </div>
 
       {/* Search */}
-      <div style={{ padding: '8px 12px', borderBottom: '1px solid #1e2d40', flexShrink: 0 }}>
+      <div style={{ padding: '7px 10px', borderBottom: '1px solid var(--hairline)', flexShrink: 0 }}>
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          background: '#111827', border: '1px solid #1e2d40',
-          borderRadius: 8, padding: '6px 10px',
+          background: 'rgba(255,255,255,0.03)', border: '1px solid var(--hairline)',
+          borderRadius: 6, padding: '5px 9px',
         }}>
-          <Search size={13} color="#4a5568" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search..."
-            style={{
-              background: 'transparent', border: 'none', outline: 'none',
-              color: '#e8edf5', fontSize: 12, flex: 1,
-            }}
-          />
+          <Search size={11} color="var(--mute)" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+            style={{ background: 'transparent', border: 'none', outline: 'none', color: '#d7dde7', fontSize: 12, flex: 1 }} />
         </div>
       </div>
 
-      {/* Add symbols dropdown */}
+      {/* Add panel */}
       {showAdd && (
-        <div style={{
-          padding: '8px 12px', borderBottom: '1px solid #1e2d40',
-          display: 'flex', flexWrap: 'wrap', gap: 4, flexShrink: 0,
-        }}>
-          {toAdd.map((sym) => (
-            <button
-              key={sym}
-              onClick={() => { addToWatchlist(sym); setShowAdd(false) }}
-              style={{
-                background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.2)',
-                borderRadius: 4, padding: '2px 8px', color: '#00d4ff',
-                fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              }}
-            >
-              + {sym.replace('USDT', '')}
+        <div style={{ padding: '7px 10px', borderBottom: '1px solid var(--hairline)', display: 'flex', flexWrap: 'wrap', gap: 4, flexShrink: 0 }}>
+          {toAdd.map(sym => (
+            <button key={sym} onClick={() => { addToWatchlist(sym); setShowAdd(false) }}
+              className="chip" style={{ cursor: 'pointer', color: 'var(--accent-blue)', borderColor: 'rgba(0,212,255,0.2)', background: 'rgba(0,212,255,0.06)' }}>
+              +{sym.replace('USDT','')}
             </button>
           ))}
         </div>
@@ -94,82 +65,62 @@ export default function WatchlistPanel() {
 
       {/* Column headers */}
       <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 80px 70px 24px',
-        padding: '6px 16px 4px',
-        fontSize: 10, color: '#4a5568', fontWeight: 600, letterSpacing: '0.5px',
+        display: 'grid', gridTemplateColumns: '1fr 80px 64px 20px',
+        padding: '5px 14px 3px',
+        fontSize: 10, color: 'var(--mute)', fontWeight: 600, letterSpacing: '0.08em',
         flexShrink: 0,
       }}>
-        <span>SYMBOL</span>
-        <span style={{ textAlign: 'right' }}>PRICE</span>
-        <span style={{ textAlign: 'right' }}>24H</span>
-        <span />
+        <span>PAIR</span><span style={{ textAlign: 'right' }}>PRICE</span>
+        <span style={{ textAlign: 'right' }}>24H</span><span />
       </div>
 
-      {/* List */}
+      {/* Rows */}
       <div style={{ flex: 1, overflow: 'auto' }}>
-        {filtered.map(({ symbol, ticker, signal }) => {
-          const active = symbol === activeSymbol
-          const SignalIcon = signal === 'BUY' ? TrendingUp : signal === 'SELL' ? TrendingDown : null
-          const signalColor = signal === 'BUY' ? '#00ff88' : signal === 'SELL' ? '#ff4757' : '#7a8da8'
+        {items.map(({ sym, ticker, signal }) => {
+          const active = sym === activeSymbol
+          const SignIcon = signal === 'BUY' ? TrendingUp : signal === 'SELL' ? TrendingDown : null
+          const sigColor = signal === 'BUY' ? 'var(--accent-green)' : 'var(--accent-red)'
 
           return (
-            <div
-              key={symbol}
-              onClick={() => setActiveSymbol(symbol)}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 80px 70px 24px',
-                alignItems: 'center',
-                padding: '10px 16px',
-                cursor: 'pointer',
-                background: active ? 'rgba(0,212,255,0.06)' : 'transparent',
-                borderLeft: active ? '2px solid #00d4ff' : '2px solid transparent',
-                transition: 'all 0.15s',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                {SignalIcon && <SignalIcon size={12} color={signalColor} />}
+            <div key={sym} onClick={() => setActiveSymbol(sym)} style={{
+              display: 'grid', gridTemplateColumns: '1fr 80px 64px 20px',
+              alignItems: 'center', padding: '9px 14px', cursor: 'pointer',
+              background: active ? 'rgba(0,212,255,0.05)' : 'transparent',
+              borderLeft: `2px solid ${active ? 'var(--accent-blue)' : 'transparent'}`,
+              transition: 'all 0.12s',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
+                {SignIcon && <SignIcon size={11} color={sigColor} style={{ flexShrink: 0 }} />}
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? '#00d4ff' : '#e8edf5' }}>
-                    {symbol.replace('USDT', '')}
+                  <div style={{ fontSize: 13, fontWeight: active ? 700 : 500, color: active ? 'var(--accent-blue)' : '#d7dde7', letterSpacing: '-0.01em' }}>
+                    {sym.replace('USDT','')}
                   </div>
-                  <div style={{ fontSize: 10, color: '#4a5568' }}>USDT</div>
+                  <div style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.06em' }}>USDT</div>
                 </div>
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                {ticker ? (
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#e8edf5' }}>
-                    ${formatPrice(ticker.price)}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 11, color: '#1e2d40' }}>...</div>
-                )}
+                {ticker
+                  ? <span className="num" style={{ fontSize: 12, color: '#d7dde7' }}>${formatPrice(ticker.price)}</span>
+                  : <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: 12 }}>···</span>}
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                {ticker ? (
-                  <div style={{
+                {ticker && (
+                  <span className="num" style={{
                     fontSize: 11, fontWeight: 600,
-                    color: ticker.changePercent >= 0 ? '#00ff88' : '#ff4757',
+                    color: ticker.changePercent >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
                   }}>
                     {formatPercent(ticker.changePercent)}
-                  </div>
-                ) : null}
+                  </span>
+                )}
               </div>
 
-              <button
-                onClick={(e) => { e.stopPropagation(); removeFromWatchlist(symbol) }}
-                style={{
-                  background: 'transparent', border: 'none', cursor: 'pointer',
-                  color: '#1e2d40', padding: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  opacity: 0, transition: 'opacity 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
-              >
-                <X size={12} />
+              <button onClick={e => { e.stopPropagation(); removeFromWatchlist(sym) }}
+                style={{ color: 'rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'flex-end', opacity: 0, transition: 'opacity 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={e => (e.currentTarget.style.opacity = '0')}>
+                <X size={11} />
               </button>
             </div>
           )
