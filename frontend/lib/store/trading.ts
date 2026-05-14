@@ -4,6 +4,14 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Ticker, Signal, Position, Order, PortfolioStats, WatchlistItem, Timeframe, ChartType } from '@/types/trading'
 
+export interface Toast {
+  id: string
+  type: 'buy' | 'sell' | 'info' | 'success' | 'error'
+  title: string
+  message: string
+  duration?: number
+}
+
 interface TradingState {
   // Selected symbol
   activeSymbol: string
@@ -18,6 +26,10 @@ interface TradingState {
   // Live data
   tickers: Record<string, Ticker>
   updateTicker: (ticker: Ticker) => void
+
+  // Price history for sparklines (last 20 ticks per symbol)
+  priceHistory: Record<string, number[]>
+  updatePriceHistory: (symbol: string, price: number) => void
 
   // Signals
   signals: Signal[]
@@ -43,6 +55,11 @@ interface TradingState {
   connected: boolean
   setConnected: (v: boolean) => void
 
+  // Toasts
+  toasts: Toast[]
+  addToast: (toast: Omit<Toast, 'id'>) => void
+  removeToast: (id: string) => void
+
   // UI
   sidebarCollapsed: boolean
   toggleSidebar: () => void
@@ -62,6 +79,13 @@ export const useTradingStore = create<TradingState>()(
       tickers: {},
       updateTicker: (ticker) =>
         set((state) => ({ tickers: { ...state.tickers, [ticker.symbol]: ticker } })),
+
+      priceHistory: {},
+      updatePriceHistory: (symbol, price) =>
+        set((state) => {
+          const prev = state.priceHistory[symbol] ?? []
+          return { priceHistory: { ...state.priceHistory, [symbol]: [...prev, price].slice(-20) } }
+        }),
 
       signals: [],
       setSignals: (signals) => set({ signals }),
@@ -88,6 +112,14 @@ export const useTradingStore = create<TradingState>()(
 
       connected: false,
       setConnected: (connected) => set({ connected }),
+
+      toasts: [],
+      addToast: (toast) =>
+        set((state) => ({
+          toasts: [...state.toasts, { ...toast, id: `toast-${Date.now()}-${Math.random()}` }].slice(-5),
+        })),
+      removeToast: (id) =>
+        set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),

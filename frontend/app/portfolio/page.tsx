@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const PortfolioPanel = dynamic(() => import('@/components/portfolio/PortfolioPanel'), { ssr: false })

@@ -1,3 +1,5 @@
+'use client'
+
 import dynamic from 'next/dynamic'
 
 const SignalPanel = dynamic(() => import('@/components/signals/SignalPanel'), { ssr: false })

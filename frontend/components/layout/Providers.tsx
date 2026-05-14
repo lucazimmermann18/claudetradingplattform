@@ -2,10 +2,11 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useWebSocket } from '@/lib/hooks/useWebSocket'
+import { useMockMarket } from '@/lib/hooks/useMockMarket'
+import ToastContainer from '@/components/ui/ToastContainer'
 
-function WSConnector({ children }: { children: React.ReactNode }) {
-  useWebSocket()
+function MarketConnector({ children }: { children: React.ReactNode }) {
+  useMockMarket()
   return <>{children}</>
 }
 
@@ -18,7 +19,10 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WSConnector>{children}</WSConnector>
+      <MarketConnector>
+        {children}
+        <ToastContainer />
+      </MarketConnector>
     </QueryClientProvider>
   )
 }
