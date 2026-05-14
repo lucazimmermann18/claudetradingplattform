@@ -1,2 +1,2 @@
-# claudetradingplattform
-trading plattform automation with claude
+# claudetradingplattform - Trading Platform Automation
+
