@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation'
 import { useTradingStore } from '@/lib/store/trading'
 import {
   LayoutDashboard, LineChart, Zap, TrendingUp, History, Settings,
-  ChevronLeft, ChevronRight, Star, LayoutGrid,
+  ChevronLeft, ChevronRight, Star, LayoutGrid, Activity,
 } from 'lucide-react'
 
 const NAV = [
   { href: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard },
   { href: '/chart',       label: 'Chart',        icon: LineChart },
   { href: '/multichart',  label: 'Multi-Chart',  icon: LayoutGrid },
+  { href: '/heatmap',     label: 'Heatmap',      icon: Activity },
   { href: '/signals',     label: 'AI Signals',   icon: Zap,       badge: 'LIVE' },
   { href: '/watchlist',   label: 'Watchlist',    icon: Star },
   { href: '/portfolio',   label: 'Portfolio',    icon: TrendingUp },
