@@ -41,6 +41,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://tradeai:tradeai_secret@postgres:5432/tradeai
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY:-please-change-me-in-production-32-chars}
+      TWELVEDATA_API_KEY: ${TWELVEDATA_API_KEY:-}
       EXCHANGE: ${EXCHANGE:-binance}
       API_KEY: ${API_KEY:-}
       API_SECRET: ${API_SECRET:-}

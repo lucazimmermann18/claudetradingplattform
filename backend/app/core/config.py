@@ -17,7 +17,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
 
-    # Market data exchange (via ccxt)
+    # Twelve Data API
+    TWELVEDATA_API_KEY: Optional[str] = None
+
+    # Market data exchange (via ccxt — fallback)
     EXCHANGE: str = "binance"
     API_KEY: Optional[str] = None
     API_SECRET: Optional[str] = None
