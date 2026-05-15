@@ -85,10 +85,9 @@ export default function TopBar() {
       {/* Price strip */}
       {ticker ? (
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 20 }}>
-          <span className="num" style={{
-            fontSize: 20, fontWeight: 600, color: '#fff', letterSpacing: '-0.03em',
-          }}>${formatPrice(ticker.price)}</span>
-
+          <span className="num" style={{ fontSize: 20, fontWeight: 600, color: '#fff', letterSpacing: '-0.03em' }}>
+            ${formatPrice(ticker.price)}
+          </span>
           {[
             { label: '24h', value: formatPercent(ticker.changePercent), positive: ticker.changePercent >= 0 },
             { label: 'High', value: `$${formatPrice(ticker.high24h)}` },
@@ -100,14 +99,19 @@ export default function TopBar() {
               <span className="num" style={{
                 fontSize: 12, fontWeight: 500,
                 color: positive !== undefined
-                  ? positive ? 'var(--accent-green)' : 'var(--accent-red)'
+                  ? (positive ? 'var(--accent-green)' : 'var(--accent-red)')
                   : '#d7dde7',
               }}>{value}</span>
             </div>
           ))}
         </div>
       ) : (
-        <span style={{ fontSize: 13, color: 'var(--mute)' }}>Loading…</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <div className="skeleton" style={{ width: 100, height: 22, borderRadius: 5 }} />
+          <div className="skeleton" style={{ width: 50, height: 14, borderRadius: 5 }} />
+          <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 5 }} />
+          <div className="skeleton" style={{ width: 70, height: 14, borderRadius: 5 }} />
+        </div>
       )}
 
       {/* Right */}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTradingStore } from '@/lib/store/trading'
-import { orderApi } from '@/lib/api/client'
+import { orderApi, portfolioApi } from '@/lib/api/client'
 import { formatPrice } from '@/lib/utils/format'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 
@@ -10,7 +10,7 @@ type Side = 'BUY' | 'SELL'
 type OType = 'MARKET' | 'LIMIT' | 'STOP'
 
 export default function OrderPanel() {
-  const { activeSymbol, tickers, portfolioStats } = useTradingStore()
+  const { activeSymbol, tickers, portfolioStats, addOrder, setPositions, setPortfolioStats, addToast } = useTradingStore()
   const [side, setSide]       = useState<Side>('BUY')
   const [type, setType]       = useState<OType>('MARKET')
   const [qty, setQty]         = useState('')
@@ -35,13 +35,35 @@ export default function OrderPanel() {
     if (type === 'LIMIT' && !price) { setError('Enter a limit price'); return }
     setSub(true); setError(null)
     try {
-      await orderApi.placeOrder({
+      const res = await orderApi.placeOrder({
         symbol: activeSymbol, side, type,
         quantity: parseFloat(qty),
         price: type !== 'MARKET' ? parseFloat(price) : undefined,
         stopPrice: type === 'STOP' ? parseFloat(stop) : undefined,
       })
-      setSuccess(true); setQty(''); setTimeout(() => setSuccess(false), 3000)
+
+      // Add to orders state immediately
+      addOrder(res.data)
+
+      // Toast confirmation
+      addToast({
+        type: side === 'BUY' ? 'buy' : 'sell',
+        title: `${side} ${activeSymbol.replace('USDT', '/USDT')} — Filled`,
+        message: `${parseFloat(qty)} @ $${formatPrice(res.data.fillPrice ?? parseFloat(price || '0'))} · Fee $${(res.data.fee ?? 0).toFixed(2)}`,
+        duration: 5000,
+      })
+
+      // Refresh portfolio state
+      Promise.all([portfolioApi.getPositions(), portfolioApi.getStats()])
+        .then(([pRes, sRes]) => {
+          setPositions(pRes.data.positions ?? [])
+          setPortfolioStats(sRes.data)
+        })
+        .catch(() => {})
+
+      setSuccess(true)
+      setQty('')
+      setTimeout(() => setSuccess(false), 3000)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Order failed')
     } finally { setSub(false) }

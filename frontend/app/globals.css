@@ -132,6 +132,24 @@ body {
   background-size: 200% 100%;
 }
 
+/* ── Skeleton loading ── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 5px;
+  display: block;
+}
+
 /* Tab active */
 .tab-active {
   background: rgba(255,255,255,0.05);

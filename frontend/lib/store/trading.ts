@@ -42,9 +42,14 @@ interface TradingState {
   portfolioStats: PortfolioStats | null
   setPortfolioStats: (stats: PortfolioStats) => void
 
+  // Equity curve — { time: unix-seconds, value: totalValue }[]
+  equityHistory: { time: number; value: number }[]
+  pushEquityPoint: (value: number) => void
+
   // Orders
   orders: Order[]
   setOrders: (orders: Order[]) => void
+  addOrder: (order: Order) => void
 
   // Watchlist
   watchlist: string[]
@@ -97,8 +102,19 @@ export const useTradingStore = create<TradingState>()(
       portfolioStats: null,
       setPortfolioStats: (portfolioStats) => set({ portfolioStats }),
 
+      equityHistory: [],
+      pushEquityPoint: (value) =>
+        set((state) => ({
+          equityHistory: [
+            ...state.equityHistory,
+            { time: Math.floor(Date.now() / 1000), value },
+          ].slice(-288), // keep 24h at 5-min resolution
+        })),
+
       orders: [],
       setOrders: (orders) => set({ orders }),
+      addOrder: (order) =>
+        set((state) => ({ orders: [order, ...state.orders].slice(0, 200) })),
 
       watchlist: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT'],
       addToWatchlist: (symbol) =>

@@ -6,6 +6,7 @@ import { signalApi } from '@/lib/api/client'
 import { formatPrice } from '@/lib/utils/format'
 import type { Signal } from '@/types/trading'
 import { Zap, TrendingUp, TrendingDown, Minus, RefreshCw, Target, Shield } from 'lucide-react'
+import { SkeletonSignalCard } from '@/components/ui/Skeleton'
 
 function ConfBar({ value }: { value: number }) {
   const color = value >= 75 ? 'var(--accent-green)' : value >= 50 ? 'var(--accent-amber)' : 'var(--accent-red)'
@@ -120,7 +121,7 @@ function SignalCard({ signal }: { signal: Signal }) {
 
 export default function SignalPanel() {
   const { signals, activeSymbol, setSignals } = useTradingStore()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(signals.length === 0)
   const [filter, setFilter]   = useState<'ALL' | 'BUY' | 'SELL'>('ALL')
 
   const fetch = async () => {
@@ -192,7 +193,12 @@ export default function SignalPanel() {
 
       {/* List */}
       <div style={{ flex: 1, overflow: 'auto', padding: '10px 10px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <>
+            <SkeletonSignalCard />
+            <SkeletonSignalCard />
+          </>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--mute)' }}>
             <Zap size={28} style={{ margin: '0 auto 10px', opacity: 0.3 }} />
             <div style={{ fontSize: 13 }}>No signals yet</div>

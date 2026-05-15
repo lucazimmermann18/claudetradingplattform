@@ -11,7 +11,7 @@ export function useMockMarket() {
     updateTicker, updatePriceHistory,
     addSignal, setSignals,
     setConnected, setPositions, setPortfolioStats, setOrders,
-    addToast,
+    addToast, pushEquityPoint,
   } = useTradingStore()
   const initialized = useRef(false)
 
@@ -61,11 +61,14 @@ export function useMockMarket() {
       }
     }, 90_000)
 
-    // Portfolio P&L refresh every 5s
+    // Portfolio P&L refresh every 5s + push equity point every 5 min
+    let equityTick = 0
     const portfolioInterval = setInterval(() => {
       const { stats: s, positions: p } = generatePortfolio()
       setPortfolioStats(s)
       setPositions(p)
+      equityTick++
+      if (equityTick % 60 === 0) pushEquityPoint(s.totalValue) // every ~5 min
     }, 5_000)
 
     return () => {
@@ -74,5 +77,5 @@ export function useMockMarket() {
       clearInterval(portfolioInterval)
       setConnected(false)
     }
-  }, [updateTicker, updatePriceHistory, addSignal, setSignals, setConnected, setPositions, setPortfolioStats, setOrders, addToast])
+  }, [updateTicker, updatePriceHistory, addSignal, setSignals, setConnected, setPositions, setPortfolioStats, setOrders, addToast, pushEquityPoint])
 }
