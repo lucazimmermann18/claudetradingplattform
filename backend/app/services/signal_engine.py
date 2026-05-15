@@ -194,6 +194,77 @@ def analyze(symbol: str, ohlcv: list[dict], timeframe: str = "15m") -> Optional[
     }
 
 
+async def analyze_with_ai(symbol: str, ohlcv: list[dict], timeframe: str = "15m") -> Optional[dict]:
+    """Try AI-enhanced analysis, fall back to technical analysis."""
+    from app.services.ai_providers import get_active_provider_config, call_ai_provider
+
+    # Always compute base indicators first
+    base = analyze(symbol, ohlcv, timeframe)
+
+    provider_cfg = await get_active_provider_config()
+    if not provider_cfg:
+        return base  # No AI configured — use pure TA
+
+    provider, api_key, model = provider_cfg
+
+    if len(ohlcv) < 60:
+        return base
+
+    df = pd.DataFrame(ohlcv)
+    closes = df["close"].values
+    volumes = df["volume"].values
+
+    rsi = calc_rsi(closes)
+    macd, macd_signal, macd_hist = calc_macd(closes)
+    bb_upper, bb_middle, bb_lower = calc_bollinger(closes)
+    ema20 = float(calc_ema(closes, 20)[-1])
+    ema50 = float(calc_ema(closes, 50)[-1])
+    ema200 = float(calc_ema(closes, 200)[-1])
+    avg_vol = float(np.mean(volumes[-20:]))
+    cur_vol = float(volumes[-1])
+
+    indicators = {
+        "price": float(closes[-1]),
+        "rsi": rsi, "macd": macd, "macd_signal": macd_signal, "macd_hist": macd_hist,
+        "bb_upper": bb_upper, "bb_middle": bb_middle, "bb_lower": bb_lower,
+        "ema20": ema20, "ema50": ema50, "ema200": ema200,
+        "volume_ratio": cur_vol / avg_vol if avg_vol > 0 else 1.0,
+    }
+
+    ai_result = await call_ai_provider(provider, api_key, model, symbol, timeframe, indicators, ohlcv)
+
+    if not ai_result:
+        logger.warning(f"[AI] {symbol}: AI call failed, using TA fallback")
+        return base
+
+    current_price = float(closes[-1])
+    signal_type = ai_result["signal"]
+    confidence = ai_result["confidence"]
+
+    # Merge AI result with computed indicators
+    return {
+        "id": str(uuid.uuid4()),
+        "symbol": symbol.replace("/", ""),
+        "type": signal_type,
+        "confidence": confidence,
+        "price": current_price,
+        "targetPrice": ai_result.get("targetPrice"),
+        "stopLoss": ai_result.get("stopLoss"),
+        "reasoning": f"[{provider.upper()} {model}] {ai_result.get('reasoning', '')}",
+        "indicators": {
+            "rsi": round(rsi, 2),
+            "macd": round(macd, 4),
+            "macdSignal": round(macd_signal, 4),
+            "ema20": round(ema20, 4),
+            "ema50": round(ema50, 4),
+            "volume": round(cur_vol, 2),
+        },
+        "timeframe": timeframe,
+        "timestamp": datetime.utcnow().isoformat(),
+        "aiProvider": provider,
+    }
+
+
 async def run_signal_engine(websocket_manager=None):
     """Background task: analyzes all watchlist symbols every 60s."""
     from app.services.market_service import get_ohlcv
@@ -205,7 +276,7 @@ async def run_signal_engine(websocket_manager=None):
         for symbol in WATCHLIST:
             try:
                 ohlcv = await get_ohlcv(symbol, "15m", 300)
-                signal = analyze(symbol, ohlcv, "15m")
+                signal = await analyze_with_ai(symbol, ohlcv, "15m")
                 if signal and signal["type"] != "NEUTRAL":
                     await r.setex(f"signal:{symbol}", 300, json.dumps(signal))
                     if websocket_manager:

@@ -124,3 +124,45 @@ export const orderApi = {
     catch { return mockOk({ orders: [] }) }
   },
 }
+
+// ── Admin / AI Config API ──────────────────────────────────────────────────
+export const adminApi = {
+  getAiConfigs: async () => {
+    try { return await apiClient.get('/api/admin/ai-config') }
+    catch {
+      return mockOk({
+        configs: [],
+        available_models: {
+          claude:   ['claude-opus-4-7', 'claude-sonnet-4-6', 'claude-haiku-4-5-20251001'],
+          openai:   ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo'],
+          deepseek: ['deepseek-chat', 'deepseek-reasoner'],
+        },
+      })
+    }
+  },
+
+  saveAiConfig: async (payload: { provider: string; api_key: string; model: string; is_active: boolean }) => {
+    try { return await apiClient.post('/api/admin/ai-config', payload) }
+    catch { return mockOk({ success: true, ...payload }) }
+  },
+
+  testAiConfig: async (payload: { provider: string; api_key: string; model: string }) => {
+    try { return await apiClient.post('/api/admin/ai-config/test', payload) }
+    catch { return mockOk({ success: false }) }
+  },
+
+  activateProvider: async (provider: string) => {
+    try { return await apiClient.post(`/api/admin/ai-config/${provider}/activate`) }
+    catch { return mockOk({ success: true, active_provider: provider }) }
+  },
+
+  deleteAiConfig: async (provider: string) => {
+    try { return await apiClient.delete(`/api/admin/ai-config/${provider}`) }
+    catch { return mockOk({ success: true }) }
+  },
+
+  getActiveProvider: async () => {
+    try { return await apiClient.get('/api/admin/ai-config/active') }
+    catch { return mockOk({ active: false, provider: null, model: null }) }
+  },
+}

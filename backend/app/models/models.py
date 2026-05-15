@@ -94,6 +94,18 @@ class Trade(Base):
     timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class AIProviderConfig(Base):
+    __tablename__ = "ai_provider_configs"
+
+    id = Column(String, primary_key=True)
+    provider = Column(String, unique=True, nullable=False)  # "claude", "openai", "deepseek"
+    api_key = Column(String, nullable=False)
+    model = Column(String, nullable=True)
+    is_active = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
 class Signal(Base):
     __tablename__ = "signals"
 

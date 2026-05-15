@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.db.database import create_tables
-from app.routers import market, signals, portfolio, orders, websocket
+from app.routers import market, signals, portfolio, orders, websocket, admin
 from app.services.websocket_manager import manager
 from app.services.ticker_streamer import stream_tickers
 from app.services.signal_engine import run_signal_engine
@@ -56,6 +56,7 @@ app.include_router(signals.router)
 app.include_router(portfolio.router)
 app.include_router(orders.router)
 app.include_router(websocket.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

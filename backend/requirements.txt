@@ -17,3 +17,5 @@ pandas==2.2.3
 ta==0.11.0
 aiohttp==3.10.8
 ccxt==4.3.98
+anthropic==0.40.0
+openai==1.57.0
