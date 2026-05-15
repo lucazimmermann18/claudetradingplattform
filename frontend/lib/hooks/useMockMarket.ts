@@ -11,7 +11,7 @@ export function useMockMarket() {
     updateTicker, updatePriceHistory,
     addSignal, setSignals,
     setConnected, setPositions, setPortfolioStats, setOrders,
-    addToast, pushEquityPoint,
+    addToast, pushEquityPoint, setScannerCountdown,
   } = useTradingStore()
   const initialized = useRef(false)
 
@@ -46,8 +46,15 @@ export function useMockMarket() {
       })
     }, 1000)
 
-    // New signals every 90s → also fire a toast
+    // Scanner countdown ticker
+    setScannerCountdown(60)
+    const countdownInterval = setInterval(() => {
+      setScannerCountdown(useTradingStore.getState().scannerCountdown <= 1 ? 60 : useTradingStore.getState().scannerCountdown - 1)
+    }, 1000)
+
+    // New signals every 60s → also fire a toast
     const signalInterval = setInterval(() => {
+      setScannerCountdown(60)
       const newSigs = generateSignals(ALL_SYMBOLS.slice(0, 3))
       const sig = newSigs[0]
       if (sig) {
@@ -59,7 +66,7 @@ export function useMockMarket() {
           duration: 6000,
         })
       }
-    }, 90_000)
+    }, 60_000)
 
     // Portfolio P&L refresh every 5s + push equity point every 5 min
     let equityTick = 0
@@ -73,9 +80,10 @@ export function useMockMarket() {
 
     return () => {
       clearInterval(tickerInterval)
+      clearInterval(countdownInterval)
       clearInterval(signalInterval)
       clearInterval(portfolioInterval)
       setConnected(false)
     }
-  }, [updateTicker, updatePriceHistory, addSignal, setSignals, setConnected, setPositions, setPortfolioStats, setOrders, addToast, pushEquityPoint])
+  }, [updateTicker, updatePriceHistory, addSignal, setSignals, setConnected, setPositions, setPortfolioStats, setOrders, addToast, pushEquityPoint, setScannerCountdown])
 }

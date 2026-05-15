@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useTradingStore } from '@/lib/store/trading'
 import { formatPrice, formatPercent } from '@/lib/utils/format'
 import { Search, ChevronDown, Bell } from 'lucide-react'
+import { SESSIONS, getOpenSessions, sessionProgress } from '@/lib/utils/sessions'
 
 const SYMBOLS = ['BTCUSDT','ETHUSDT','SOLUSDT','BNBUSDT','XRPUSDT','ADAUSDT','DOTUSDT','AVAXUSDT','LINKUSDT','LTCUSDT']
 
@@ -12,9 +13,16 @@ export default function TopBar() {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
 
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
   const ticker = tickers[activeSymbol]
   const base = activeSymbol.replace('USDT','')
   const filtered = q ? SYMBOLS.filter(s => s.includes(q.toUpperCase())) : SYMBOLS
+  const openSessions = getOpenSessions(now)
 
   const select = useCallback((s: string) => { setActiveSymbol(s); setOpen(false); setQ('') }, [setActiveSymbol])
 
@@ -114,8 +122,42 @@ export default function TopBar() {
         </div>
       )}
 
+      {/* Session indicators */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
+        {SESSIONS.map(s => {
+          const isOpen = openSessions.some(o => o.name === s.name)
+          const prog = isOpen ? sessionProgress(s, now) : 0
+          return (
+            <div key={s.name} title={`${s.name} session${isOpen ? ` — ${Math.round(prog * 100)}% complete` : ' (closed)'}`} style={{
+              display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px', borderRadius: 5,
+              background: isOpen ? `rgba(${s.rgb},0.08)` : 'transparent',
+              border: `1px solid ${isOpen ? `rgba(${s.rgb},0.22)` : 'rgba(255,255,255,0.05)'}`,
+              transition: 'all 0.3s',
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {isOpen && (
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0,
+                  width: `${prog * 100}%`,
+                  background: `rgba(${s.rgb},0.06)`,
+                  transition: 'width 1s linear',
+                }} />
+              )}
+              <span style={{
+                width: 5, height: 5, borderRadius: '50%', flexShrink: 0, position: 'relative',
+                background: isOpen ? `rgb(${s.rgb})` : 'rgba(255,255,255,0.15)',
+                boxShadow: isOpen ? `0 0 6px rgb(${s.rgb})` : 'none',
+              }} />
+              <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.05em', position: 'relative',
+                color: isOpen ? `rgb(${s.rgb})` : 'var(--mute)',
+              }}>{s.short}</span>
+            </div>
+          )
+        })}
+      </div>
+
       {/* Right */}
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <span className="dot" style={{
             background: connected ? 'var(--accent-green)' : 'var(--accent-red)',

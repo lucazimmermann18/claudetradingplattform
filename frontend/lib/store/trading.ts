@@ -65,6 +65,24 @@ interface TradingState {
   addToast: (toast: Omit<Toast, 'id'>) => void
   removeToast: (id: string) => void
 
+  // AI Skillset
+  aiSkillset: string
+  setAiSkillset: (s: string) => void
+
+  // Knowledge module toggles
+  knowledgeModules: Record<string, boolean>
+  toggleKnowledge: (key: string) => void
+
+  // Multi-chart grid
+  multiChartSymbols: string[]
+  setMultiChartSymbols: (symbols: string[]) => void
+  multiChartLayout: '2x2' | '3x2'
+  setMultiChartLayout: (layout: '2x2' | '3x2') => void
+
+  // Scanner countdown (seconds)
+  scannerCountdown: number
+  setScannerCountdown: (n: number) => void
+
   // UI
   sidebarCollapsed: boolean
   toggleSidebar: () => void
@@ -137,6 +155,34 @@ export const useTradingStore = create<TradingState>()(
       removeToast: (id) =>
         set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
 
+      aiSkillset: 'Multi-Strategy',
+      setAiSkillset: (aiSkillset) => set({ aiSkillset }),
+
+      knowledgeModules: {
+        'Support & Resistance': true,
+        'Market Structure': true,
+        'Liquidity Zones': false,
+        'Session Analysis': true,
+        'News Filter': false,
+        'Correlation Matrix': false,
+        'Elliott Wave': false,
+        'Order Flow': false,
+        'Fibonacci Confluence': false,
+        'Volume Profile': false,
+      },
+      toggleKnowledge: (key) =>
+        set((state) => ({
+          knowledgeModules: { ...state.knowledgeModules, [key]: !state.knowledgeModules[key] },
+        })),
+
+      multiChartSymbols: ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT', 'ADAUSDT'],
+      setMultiChartSymbols: (multiChartSymbols) => set({ multiChartSymbols }),
+      multiChartLayout: '2x2',
+      setMultiChartLayout: (multiChartLayout) => set({ multiChartLayout }),
+
+      scannerCountdown: 60,
+      setScannerCountdown: (scannerCountdown) => set({ scannerCountdown }),
+
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     }),
@@ -148,6 +194,10 @@ export const useTradingStore = create<TradingState>()(
         chartType: state.chartType,
         watchlist: state.watchlist,
         sidebarCollapsed: state.sidebarCollapsed,
+        aiSkillset: state.aiSkillset,
+        knowledgeModules: state.knowledgeModules,
+        multiChartSymbols: state.multiChartSymbols,
+        multiChartLayout: state.multiChartLayout,
       }),
     }
   )

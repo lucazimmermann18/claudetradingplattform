@@ -5,7 +5,7 @@ import { useTradingStore } from '@/lib/store/trading'
 import { signalApi } from '@/lib/api/client'
 import { formatPrice } from '@/lib/utils/format'
 import type { Signal } from '@/types/trading'
-import { Zap, TrendingUp, TrendingDown, Minus, RefreshCw, Target, Shield } from 'lucide-react'
+import { Zap, TrendingUp, TrendingDown, Minus, RefreshCw, Target, Shield, Brain, Clock } from 'lucide-react'
 import { SkeletonSignalCard } from '@/components/ui/Skeleton'
 
 function ConfBar({ value }: { value: number }) {
@@ -119,8 +119,10 @@ function SignalCard({ signal }: { signal: Signal }) {
   )
 }
 
+const SKILLSETS = ['Smart Money Concepts', 'Trend Following', 'Breakout Hunter', 'Scalping Mode', 'Price Action', 'Multi-Strategy']
+
 export default function SignalPanel() {
-  const { signals, activeSymbol, setSignals } = useTradingStore()
+  const { signals, activeSymbol, setSignals, aiSkillset, setAiSkillset, scannerCountdown } = useTradingStore()
   const [loading, setLoading] = useState(signals.length === 0)
   const [filter, setFilter]   = useState<'ALL' | 'BUY' | 'SELL'>('ALL')
 
@@ -172,6 +174,32 @@ export default function SignalPanel() {
           }}>
             <RefreshCw size={12} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} />
           </button>
+        </div>
+      </div>
+
+      {/* Skillset selector */}
+      <div style={{
+        padding: '7px 14px', borderBottom: '1px solid var(--hairline)', flexShrink: 0,
+        display: 'flex', flexDirection: 'column', gap: 6,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
+          <Brain size={10} color="var(--accent-violet)" />
+          <span style={{ fontSize: 9, color: 'var(--mute)', letterSpacing: '0.1em', fontWeight: 600 }}>AI SKILLSET</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Clock size={9} color="var(--mute)" />
+            <span className="num" style={{ fontSize: 9, color: 'var(--mute)' }}>Next scan in <span style={{ color: 'var(--accent-amber)' }}>{scannerCountdown}s</span></span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {SKILLSETS.map(skill => (
+            <button key={skill} onClick={() => setAiSkillset(skill)} style={{
+              padding: '3px 9px', borderRadius: 5, fontSize: 10, fontWeight: 600, cursor: 'pointer',
+              background: aiSkillset === skill ? 'rgba(167,139,250,0.12)' : 'transparent',
+              border: aiSkillset === skill ? '1px solid rgba(167,139,250,0.3)' : '1px solid var(--hairline)',
+              color: aiSkillset === skill ? 'var(--accent-violet)' : 'var(--mute)',
+              transition: 'all 0.15s',
+            }}>{skill}</button>
+          ))}
         </div>
       </div>
 

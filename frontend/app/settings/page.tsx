@@ -5,9 +5,10 @@ import {
   Settings, Key, Shield, Bell, Database,
   CheckCircle, Eye, EyeOff, Zap, Brain,
   RefreshCw, Trash2, Play, Star, AlertCircle,
-  ChevronDown,
+  ChevronDown, BookOpen,
 } from 'lucide-react'
 import { adminApi } from '@/lib/api/client'
+import { useTradingStore } from '@/lib/store/trading'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type Tab = 'ai' | 'exchange' | 'risk' | 'notifications' | 'system'
@@ -357,6 +358,7 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 3000)
   }
 
+  const { aiSkillset, setAiSkillset, knowledgeModules, toggleKnowledge } = useTradingStore()
   const activeProvider = configs.find(c => c.is_active)
 
   return (
@@ -450,6 +452,49 @@ export default function SettingsPage() {
                 Every 60 seconds, the engine fetches OHLCV data for all watchlist symbols and computes RSI, MACD, Bollinger Bands, and EMA indicators.
                 When an AI provider is active, it packages these indicators into a structured prompt and asks the AI for a trading signal (BUY/SELL/NEUTRAL),
                 confidence score, reasoning, target price, and stop-loss. Without AI, the engine falls back to the built-in rule-based scoring system.
+              </div>
+            </div>
+
+            {/* Skillset selector */}
+            <div style={{ background: 'var(--ink-850)', border: '1px solid var(--hairline)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '13px 18px', borderBottom: '1px solid var(--hairline)', background: 'rgba(255,255,255,0.01)' }}>
+                <Brain size={14} color="var(--accent-violet)" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>AI Skillset</span>
+                <span style={{ fontSize: 11, color: 'var(--mute)', marginLeft: 4 }}>Analysis strategy applied to every signal</span>
+              </div>
+              <div style={{ padding: '14px 18px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {['Smart Money Concepts', 'Trend Following', 'Breakout Hunter', 'Scalping Mode', 'Price Action', 'Multi-Strategy'].map(skill => (
+                  <button key={skill} onClick={() => setAiSkillset(skill)} style={{
+                    padding: '7px 14px', borderRadius: 7, fontSize: 12, fontWeight: aiSkillset === skill ? 700 : 400,
+                    cursor: 'pointer', border: 'none', transition: 'all 0.15s',
+                    background: aiSkillset === skill ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
+                    color: aiSkillset === skill ? 'var(--accent-violet)' : 'var(--mute)',
+                    outline: aiSkillset === skill ? '1px solid rgba(167,139,250,0.35)' : '1px solid var(--hairline)',
+                  }}>{skill}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Knowledge toggles */}
+            <div style={{ background: 'var(--ink-850)', border: '1px solid var(--hairline)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '13px 18px', borderBottom: '1px solid var(--hairline)', background: 'rgba(255,255,255,0.01)' }}>
+                <BookOpen size={14} color="var(--accent-blue)" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Knowledge Modules</span>
+                <span style={{ fontSize: 11, color: 'var(--mute)', marginLeft: 4 }}>Enable additional analysis layers for the AI</span>
+              </div>
+              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                {Object.entries(knowledgeModules).map(([key, enabled], i, arr) => (
+                  <div key={key} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 0',
+                    borderBottom: i < arr.length - 1 ? '1px solid var(--hairline)' : 'none',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 13, color: enabled ? '#d7dde7' : 'var(--mute)', fontWeight: enabled ? 500 : 400, transition: 'color 0.2s' }}>{key}</div>
+                    </div>
+                    <Toggle value={enabled} onChange={() => toggleKnowledge(key)} />
+                  </div>
+                ))}
               </div>
             </div>
 

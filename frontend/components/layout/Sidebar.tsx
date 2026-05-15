@@ -5,17 +5,18 @@ import { usePathname } from 'next/navigation'
 import { useTradingStore } from '@/lib/store/trading'
 import {
   LayoutDashboard, LineChart, Zap, TrendingUp, History, Settings,
-  ChevronLeft, ChevronRight, Star,
+  ChevronLeft, ChevronRight, Star, LayoutGrid,
 } from 'lucide-react'
 
 const NAV = [
-  { href: '/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { href: '/chart',     label: 'Chart',       icon: LineChart },
-  { href: '/signals',   label: 'AI Signals',  icon: Zap,        badge: 'LIVE' },
-  { href: '/watchlist', label: 'Watchlist',   icon: Star },
-  { href: '/portfolio', label: 'Portfolio',   icon: TrendingUp },
-  { href: '/history',   label: 'History',     icon: History },
-  { href: '/settings',  label: 'Admin',       icon: Settings },
+  { href: '/dashboard',   label: 'Dashboard',    icon: LayoutDashboard },
+  { href: '/chart',       label: 'Chart',        icon: LineChart },
+  { href: '/multichart',  label: 'Multi-Chart',  icon: LayoutGrid },
+  { href: '/signals',     label: 'AI Signals',   icon: Zap,       badge: 'LIVE' },
+  { href: '/watchlist',   label: 'Watchlist',    icon: Star },
+  { href: '/portfolio',   label: 'Portfolio',    icon: TrendingUp },
+  { href: '/history',     label: 'History',      icon: History },
+  { href: '/settings',    label: 'Admin',        icon: Settings },
 ]
 
 export default function Sidebar() {
